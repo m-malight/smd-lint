@@ -10,6 +10,29 @@ export function activate(context: vscode.ExtensionContext) {
 
   let highlightDecorationType: vscode.TextEditorDecorationType;
 
+  let excessRepeatition = vscode.commands.registerCommand(
+    "smd-lint.excess",
+    () => {
+      const doc: string =
+        vscode.window.activeTextEditor?.document.getText() as string;
+
+      let words = Array.from(
+        new Set(doc.replace(/[^\w\s]+/gm, " ").split(/[\s\r\n]+/))
+      );
+
+      let excessDuplicates: string[] | string = [];
+      for (var i = 0; i < words.length; i++) {
+        const regex = new RegExp(words[i], "gim");
+        const numberOfRepeatition = (doc.match(regex) || []).length;
+        if (numberOfRepeatition > 50) {
+          excessDuplicates.push(words[i]);
+        }
+      }
+      excessDuplicates = excessDuplicates.join(" | ");
+      vscode.window.showInformationMessage(excessDuplicates);
+    }
+  );
+
   let checks = vscode.commands.registerCommand("smd-lint.checks", async () => {
     const check = await vscode.window.showQuickPick(checkList, {
       matchOnDetail: true,
@@ -160,6 +183,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(checks);
   context.subscriptions.push(rules);
   context.subscriptions.push(onSaveDoc);
+  context.subscriptions.push(excessRepeatition);
 }
 
 export function deactivate() {}

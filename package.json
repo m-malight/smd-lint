@@ -14,16 +14,16 @@
   "contributes": {
     "commands": [
       {
-        "command": "smd-lint.h",
-        "title": "Hi"
-      },
-      {
         "command": "smd-lint.checks",
         "title": "Check"
       },
       {
         "command": "smd-lint.rules",
         "title": "Rules"
+      },
+      {
+        "command": "smd-lint.excess",
+        "title": "Excess Repeatition"
       }
     ]
   },
