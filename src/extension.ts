@@ -1,88 +1,165 @@
 import * as vscode from "vscode";
-import { keywords, generateRegexFromList } from "./keyword";
+import * as path from "path";
+import * as fs from "fs";
+import { runCheck, patterns, checkList } from "./utils";
+
+let activePattern: { regex: RegExp; msg: string } | null;
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Congratulations, your extension "smd-lint" is now active!');
-
-  let disposable = vscode.commands.registerCommand("smd-lint.h", () => {
-    vscode.window.showInformationMessage("SMD lint!");
-  });
+  let diagnosticCollection: vscode.DiagnosticCollection;
 
   let highlightDecorationType: vscode.TextEditorDecorationType;
 
-  let disposable2 = vscode.workspace.onDidSaveTextDocument(
-    (doc: vscode.TextDocument) => {
-      let text = doc.getText();
+  let checks = vscode.commands.registerCommand("smd-lint.checks", async () => {
+    const check = await vscode.window.showQuickPick(checkList, {
+      matchOnDetail: true,
+    });
 
-      const patterns = {
-        codeBlocks: /```[\s\S]*?```/gm,
-        startWithCapitalLetter: /(?<=(\n|\.\s+))[a-z].*?[.!?]\s/gm,
-        noCapitalLetterInMiddle: /(?<=\w+\s)\b[A-Z][a-z]*\b/gm,
-        separatePByEmptyLine: /\n\w+/gm,
-        useHeadingStyle: /^\r\n[\sA-Za-z0-9!?]+\r\n$/gm,
-        noCapitalization:
-          /([#]+\s+)\b[A-Z][A-Za-z ]*\b(?: +[A-Z][A-Za-z]*\b)+/gm,
-        // oneHeading1: /^#\s+[^\r]+/gm,
-        // separateP: /[A-Z][^.!?\r]*(?!(?:```[\s\S]*?```))[^!?\r]*(?=[.!?]\s*)/gm,
-        techWord: function () {
-          let techWord: string[] | null = text.match(this.codeBlocks);
+    const doc: vscode.TextDocument = vscode.window.activeTextEditor?.document!;
+    let checkResult: (
+      | vscode.TextEditorDecorationType
+      | vscode.DiagnosticCollection
+    )[];
 
-          // Get each word in code block and create an Array
-          techWord = (techWord || ["script"])
-            .reduce((a, b) => a + b, "")
-            .replace(/```/gm, "")
-            .replace(/[^\w\s]+/gm, " ")
-            .split(/[\s\r\n]+/);
-
-          // Filter out words already in the keywod string and append keyword to the list
-          techWord = (
-            techWord
-              .filter((block) => !keywords.match(new RegExp(block, "gm")))
-              .join(" ") + ` ${keywords}`
-          ).split(" ");
-
-          // Return a regular expression
-          return generateRegexFromList(techWord);
-        },
-      };
-
-      // console.log(text);
-      let match;
-      let regex = patterns.noCapitalLetterInMiddle;
-      highlightDecorationType?.dispose();
-      highlightDecorationType = vscode.window.createTextEditorDecorationType({
-        backgroundColor: "yellow", // Set the background color
-        color: "black", // Set the text color
-        fontWeight: "bold", // Make the text bold
-      });
-
-      const decorations: vscode.DecorationOptions[] = [];
-      while ((match = regex.exec(text)) !== null) {
-        const startPosition = doc.positionAt(match.index);
-        const endPosition = doc.positionAt(match.index + match[0].length);
-        const range = new vscode.Range(startPosition, endPosition);
-
-        // Define decoration options (e.g., change background color)
-        const decoration = {
-          range: range,
-          hoverMessage: "This is a matched word", // Optional hover message
+    switch (check?.label) {
+      case "Clear Checks":
+        highlightDecorationType.dispose();
+        diagnosticCollection.clear();
+        activePattern = null;
+        break;
+      case "Sentence must Start with Cap":
+        checkResult = runCheck(
+          doc,
+          patterns.startWithCapitalLetter,
+          highlightDecorationType,
+          diagnosticCollection,
+          check.msg!
+        );
+        activePattern = {
+          regex: patterns.startWithCapitalLetter,
+          msg: check.msg!,
         };
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
+        break;
+      case "No Cap in Middle":
+        checkResult = runCheck(
+          doc,
+          patterns.noCapitalLetterInMiddle,
+          highlightDecorationType,
+          diagnosticCollection,
+          check.msg!
+        );
+        activePattern = {
+          regex: patterns.noCapitalLetterInMiddle,
+          msg: check.msg!,
+        };
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
+        break;
+      case "Separate Paragraph with Empty Line":
+        checkResult = runCheck(
+          doc,
+          patterns.separatePByEmptyLine,
+          highlightDecorationType,
+          diagnosticCollection,
+          check.msg!
+        );
+        activePattern = {
+          regex: patterns.separatePByEmptyLine,
+          msg: check.msg!,
+        };
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
+        break;
+      case "Use Heading Style":
+        checkResult = runCheck(
+          doc,
+          patterns.useHeadingStyle,
+          highlightDecorationType,
+          diagnosticCollection,
+          check.msg!
+        );
+        activePattern = {
+          regex: patterns.useHeadingStyle,
+          msg: check.msg!,
+        };
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
+        break;
+      case "Proper Heading Format":
+        checkResult = runCheck(
+          doc,
+          patterns.noCapitalization,
+          highlightDecorationType,
+          diagnosticCollection,
+          check.msg!
+        );
+        activePattern = {
+          regex: patterns.noCapitalization,
+          msg: check.msg!,
+        };
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
+        break;
+      case "Tech Words in Code Style":
+        checkResult = runCheck(
+          doc,
+          patterns.techWord(doc.getText() || ""),
+          highlightDecorationType,
+          diagnosticCollection,
+          check.msg!
+        );
+        activePattern = {
+          regex: patterns.techWord(doc.getText() || ""),
+          msg: check.msg!,
+        };
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
+        break;
+    }
+  });
 
-        decorations.push(decoration);
-        // Apply the decoration to the editor
-        regex.lastIndex = match.index + match[0].length;
+  let rules = vscode.commands.registerCommand("smd-lint.rules", () => {
+    const panel = vscode.window.createWebviewPanel(
+      "rulesView",
+      "OpenReplay Rules",
+      vscode.ViewColumn.One,
+      { enableScripts: true }
+    );
+    const rulesPath = vscode.Uri.file(
+      path.join(context.extensionPath, "src/rules.html")
+    );
+    const rulesContent = fs.readFileSync(rulesPath.fsPath, "utf8");
+    panel.webview.html = rulesContent;
+  });
+
+  let onSaveDoc = vscode.workspace.onDidSaveTextDocument(
+    (doc: vscode.TextDocument) => {
+      if (activePattern) {
+        let checkResult = runCheck(
+          doc,
+          activePattern.regex,
+          highlightDecorationType,
+          diagnosticCollection,
+          activePattern.msg
+        );
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
       }
-
-      vscode.window.activeTextEditor?.setDecorations(
-        highlightDecorationType,
-        decorations
-      );
-      // console.log(text);
     }
   );
 
-  context.subscriptions.push(disposable);
-  context.subscriptions.push(disposable2);
+  context.subscriptions.push(checks);
+  context.subscriptions.push(rules);
+  context.subscriptions.push(onSaveDoc);
 }
 
 export function deactivate() {}

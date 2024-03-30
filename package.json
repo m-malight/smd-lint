@@ -18,8 +18,12 @@
         "title": "Hi"
       },
       {
-        "command": "smd-lint.g",
+        "command": "smd-lint.checks",
         "title": "Check"
+      },
+      {
+        "command": "smd-lint.rules",
+        "title": "Rules"
       }
     ]
   },
