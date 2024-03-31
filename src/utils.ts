@@ -76,7 +76,7 @@ export const patterns = {
     techWord = (techWord || ["script"])
       .reduce((a, b) => a + b, "")
       .replace(/```/gm, "")
-      .replace(/[^\w\s]+/gm, " ")
+      .replace(/[^\w\s\=]+/gm, " ")
       .split(/[\s\r\n]+/);
 
     // Filter out words already in the keyword string and append keyword to the list
