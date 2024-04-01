@@ -170,7 +170,7 @@ export function activate(context: vscode.ExtensionContext) {
       { enableScripts: true }
     );
     const rulesPath = vscode.Uri.file(
-      path.join(context.extensionPath, "src/rules.html")
+      path.join(context.extensionPath, "dist/rules.html")
     );
     const rulesContent = fs.readFileSync(rulesPath.fsPath, "utf8");
     panel.webview.html = rulesContent;

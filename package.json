@@ -28,9 +28,6 @@
       }
     ]
   },
-  "files": [
-    "src/rules.html"
-  ],
   "extensionDependencies": [
     "DavidAnson.vscode-markdownlint"
   ],
