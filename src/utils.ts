@@ -5,7 +5,10 @@ const keywords =
 
 function generateRegexFromList(strings: string[], global: boolean = true) {
   const pattern = strings
-    .map((str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .map((str) => {
+      str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return `\\b${str}\\b`;
+    })
     .join("|");
   return global ? new RegExp(pattern, "gm") : new RegExp(pattern);
 }
@@ -15,9 +18,20 @@ export function runCheck(
   regex: RegExp,
   decorationType: vscode.TextEditorDecorationType,
   diagnosticCollection: vscode.DiagnosticCollection,
-  msg: string
+  msg: string,
+  removeCodeBlock?: boolean
 ): (vscode.TextEditorDecorationType | vscode.DiagnosticCollection)[] {
   let text = doc?.getText() || "";
+  const blockIndices: { start: number; end: number }[] = [];
+  if (removeCodeBlock) {
+    text = text.replace(patterns.codeBlocks, (match, offset) => {
+      blockIndices.push({
+        start: offset,
+        end: offset + match.length,
+      });
+      return match;
+    });
+  }
   let match;
 
   decorationType?.dispose();
@@ -35,23 +49,33 @@ export function runCheck(
   const uri = doc.uri;
 
   while ((match = regex.exec(text)) !== null) {
-    const startPosition = doc.positionAt(match.index);
-    const endPosition = doc.positionAt(match.index + match[0].length);
-    const range = new vscode.Range(startPosition, endPosition);
-    // Add diagnostic message
-    const diagnostic = new vscode.Diagnostic(
-      range,
-      msg,
-      vscode.DiagnosticSeverity.Warning
-    );
+    let inRange: boolean = true;
+    for (let i of blockIndices) {
+      if (match.index >= i.start && match.index <= i.end) {
+        inRange = false;
+        break;
+      }
+    }
 
-    const decoration = {
-      range: range,
-      hoverMessage: msg,
-    };
+    if (inRange) {
+      const startPosition = doc.positionAt(match.index);
+      const endPosition = doc.positionAt(match.index + match[0].length);
+      const range = new vscode.Range(startPosition, endPosition);
+      // Add diagnostic message
+      const diagnostic = new vscode.Diagnostic(
+        range,
+        msg,
+        vscode.DiagnosticSeverity.Warning
+      );
 
-    decorations.push(decoration);
-    diagnostics.push(diagnostic);
+      const decoration = {
+        range: range,
+        hoverMessage: msg,
+      };
+
+      decorations.push(decoration);
+      diagnostics.push(diagnostic);
+    }
     regex.lastIndex = match.index + match[0].length;
   }
 

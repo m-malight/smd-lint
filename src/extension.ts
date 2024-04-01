@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { runCheck, patterns, checkList } from "./utils";
 
-let activePattern: { regex: RegExp; msg: string } | null;
+let activePattern: { regex: RegExp; msg: string; rm_block: boolean } | null;
 
 export function activate(context: vscode.ExtensionContext) {
   let diagnosticCollection: vscode.DiagnosticCollection;
@@ -18,18 +18,20 @@ export function activate(context: vscode.ExtensionContext) {
 
       let words = Array.from(
         new Set(doc.replace(/[^\w\s]+/gm, " ").split(/[\s\r\n]+/))
-      );
+      ).map((str) => `\\b${str}\\b`);
 
       let excessDuplicates: string[] | string = [];
       for (var i = 0; i < words.length; i++) {
         const regex = new RegExp(words[i], "gim");
         const numberOfRepeatition = (doc.match(regex) || []).length;
         if (numberOfRepeatition > 50) {
-          excessDuplicates.push(words[i]);
+          excessDuplicates.push(words[i].replace(/\\b/g, ""));
         }
       }
-      excessDuplicates = excessDuplicates.join(" | ");
-      vscode.window.showInformationMessage(excessDuplicates);
+      excessDuplicates = excessDuplicates
+        .filter((str) => str !== "")
+        .join(" | ");
+      vscode.window.showInformationMessage(excessDuplicates, { modal: true });
     }
   );
 
@@ -56,11 +58,13 @@ export function activate(context: vscode.ExtensionContext) {
           patterns.startWithCapitalLetter,
           highlightDecorationType,
           diagnosticCollection,
-          check.msg!
+          check.msg!,
+          true
         );
         activePattern = {
           regex: patterns.startWithCapitalLetter,
           msg: check.msg!,
+          rm_block: true,
         };
         highlightDecorationType =
           checkResult[0] as vscode.TextEditorDecorationType;
@@ -72,11 +76,13 @@ export function activate(context: vscode.ExtensionContext) {
           patterns.noCapitalLetterInMiddle,
           highlightDecorationType,
           diagnosticCollection,
-          check.msg!
+          check.msg!,
+          true
         );
         activePattern = {
           regex: patterns.noCapitalLetterInMiddle,
           msg: check.msg!,
+          rm_block: true,
         };
         highlightDecorationType =
           checkResult[0] as vscode.TextEditorDecorationType;
@@ -88,11 +94,13 @@ export function activate(context: vscode.ExtensionContext) {
           patterns.separatePByEmptyLine,
           highlightDecorationType,
           diagnosticCollection,
-          check.msg!
+          check.msg!,
+          true
         );
         activePattern = {
           regex: patterns.separatePByEmptyLine,
           msg: check.msg!,
+          rm_block: true,
         };
         highlightDecorationType =
           checkResult[0] as vscode.TextEditorDecorationType;
@@ -104,11 +112,13 @@ export function activate(context: vscode.ExtensionContext) {
           patterns.useHeadingStyle,
           highlightDecorationType,
           diagnosticCollection,
-          check.msg!
+          check.msg!,
+          true
         );
         activePattern = {
           regex: patterns.useHeadingStyle,
           msg: check.msg!,
+          rm_block: true,
         };
         highlightDecorationType =
           checkResult[0] as vscode.TextEditorDecorationType;
@@ -125,6 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
         activePattern = {
           regex: patterns.noCapitalization,
           msg: check.msg!,
+          rm_block: false,
         };
         highlightDecorationType =
           checkResult[0] as vscode.TextEditorDecorationType;
@@ -136,11 +147,13 @@ export function activate(context: vscode.ExtensionContext) {
           patterns.techWord(doc.getText() || ""),
           highlightDecorationType,
           diagnosticCollection,
-          check.msg!
+          check.msg!,
+          true
         );
         activePattern = {
           regex: patterns.techWord(doc.getText() || ""),
           msg: check.msg!,
+          rm_block: true,
         };
         highlightDecorationType =
           checkResult[0] as vscode.TextEditorDecorationType;
@@ -171,7 +184,8 @@ export function activate(context: vscode.ExtensionContext) {
           activePattern.regex,
           highlightDecorationType,
           diagnosticCollection,
-          activePattern.msg
+          activePattern.msg,
+          activePattern.rm_block
         );
         highlightDecorationType =
           checkResult[0] as vscode.TextEditorDecorationType;
