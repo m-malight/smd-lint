@@ -42,8 +42,6 @@ The SMD Lint extension is a powerful tool designed to help you maintain consiste
 2. Utilize the provided commands in the command palette (`Ctrl+Shift+P`) to access various features of the SMD Lint extension.
 3. Follow the on-screen prompts and instructions to check for rule violations and maintain Markdown file quality.
 
-![Usage demonstration](gif/smd.gif)
-
 ## Feedback and support
 
 For any questions, feedback, or support requests, please contact us at [support@smd.lint](mailto:solisomamadubueze@gmail.com). We're here to help you get the most out of the SMD Lint extension!

@@ -2,10 +2,11 @@
   "name": "smd-lint",
   "displayName": "SMDLint",
   "description": "Ensure your Markdown documents adhere to coding standards and best practices with features such as code block validation, proper formatting checks and more. ",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.87.0"
   },
+  "publisher": "solisoma-smd",
   "categories": [
     "Other"
   ],
@@ -27,9 +28,16 @@
       }
     ]
   },
+  "files": [
+    "src/rules.html"
+  ],
   "extensionDependencies": [
     "DavidAnson.vscode-markdownlint"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/m-malight/smd-lint"
+  },
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "webpack",
