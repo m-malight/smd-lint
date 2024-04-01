@@ -2,7 +2,7 @@
   "name": "smd-lint",
   "displayName": "SMDLint",
   "description": "Ensure your Markdown documents adhere to coding standards and best practices with features such as code block validation, proper formatting checks and more. ",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "engines": {
     "vscode": "^1.87.0"
   },
