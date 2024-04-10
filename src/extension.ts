@@ -159,6 +159,23 @@ export function activate(context: vscode.ExtensionContext) {
           checkResult[0] as vscode.TextEditorDecorationType;
         diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
         break;
+      case "Proper Hyperlink Format":
+        checkResult = runCheck(
+          doc,
+          patterns.hyperlink,
+          highlightDecorationType,
+          diagnosticCollection,
+          check.msg!
+        );
+        activePattern = {
+          regex: patterns.hyperlink,
+          msg: check.msg!,
+          rm_block: false,
+        };
+        highlightDecorationType =
+          checkResult[0] as vscode.TextEditorDecorationType;
+        diagnosticCollection = checkResult[1] as vscode.DiagnosticCollection;
+        break;
     }
   });
 

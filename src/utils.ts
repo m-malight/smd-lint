@@ -87,10 +87,11 @@ export function runCheck(
 export const patterns = {
   codeBlocks: /```[\s\S]*?```/gm,
   startWithCapitalLetter: /(?<=(\n|\.\s+))[a-z].*?[.!?]\s/gm,
-  noCapitalLetterInMiddle: /(?<=\w+\s)\b[A-Z][a-z]*\b/gm,
-  separatePByEmptyLine: /\n\w+/gm,
+  noCapitalLetterInMiddle: /(?<=\w+\s[^\r\n.?!:]*)\b[A-Z][a-z]*\b/gm,
+  separatePByEmptyLine: /(?<=[?.!:]+\r\n)\w+/gm,
   useHeadingStyle: /^\r\n[\sA-Za-z0-9!?]+\r\n$/gm,
   noCapitalization: /([#]+\s+)\b[A-Z][A-Za-z ]*\b(?: +[A-Z][A-Za-z]*\b)+/gm,
+  hyperlink: /https?:\/\/\w+(\.\w+)+\/\w+[\.\w+]+(\/\w+)*\?[\w%&=]*/gm,
   // oneHeading1: /^#\s+[^\r]+/gm,
   // separateP: /[A-Z][^.!?\r]*(?!(?:```[\s\S]*?```))[^!?\r]*(?=[.!?]\s*)/gm,
   techWord: function (text: string) {
@@ -151,5 +152,10 @@ export const checkList: ({ msg?: string } & vscode.QuickPickItem)[] = [
     label: "Tech Words in Code Style",
     description: "Ensure that technical words are in code format",
     msg: "Technical word is not in code format",
+  },
+  {
+    label: "Proper Hyperlink Format",
+    description: "Ensure that hyperlinks are in correct format",
+    msg: "hyperlink is not in correct format",
   },
 ];
