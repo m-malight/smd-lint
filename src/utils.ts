@@ -91,7 +91,7 @@ export const patterns = {
   separatePByEmptyLine: /(?<=[?.!:]+\r\n)\w+/gm,
   useHeadingStyle: /^\r\n[\sA-Za-z0-9!?]+\r\n$/gm,
   noCapitalization: /([#]+\s+)\b[A-Z][A-Za-z ]*\b(?: +[A-Z][A-Za-z]*\b)+/gm,
-  hyperlink: /https?:\/\/\w+(\.\w+)+\/\w+[\.\w+]+(\/\w+)*\?[\w%&=]*/gm,
+  hyperlink: /\bhttps?:\/\/\S+#:~:\S+/gm,
   // oneHeading1: /^#\s+[^\r]+/gm,
   // separateP: /[A-Z][^.!?\r]*(?!(?:```[\s\S]*?```))[^!?\r]*(?=[.!?]\s*)/gm,
   techWord: function (text: string) {
